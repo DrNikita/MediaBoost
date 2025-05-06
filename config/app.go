@@ -5,13 +5,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type appConfig struct {
+type AppConfig struct {
 	Host string `envconfig:"host"`
 	Port string `envconfig:"port"`
 }
 
-func MustConfigApp() (*appConfig, error) {
-	var ac appConfig
+func MustConfigApp() (*AppConfig, error) {
+	var ac AppConfig
 	err := envconfig.Process("app", &ac)
 	if err != nil {
 		return nil, err

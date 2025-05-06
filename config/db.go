@@ -5,16 +5,16 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type dbConfig struct {
+type DBConfig struct {
 	Host     string `envconfig:"host"`
-	Port     string `envconfig:"port"`
+	Port     int    `envconfig:"port"`
 	User     string `envconfig:"user"`
 	Password string `envconfig:"password"`
 	Name     string `envconfig:"name"`
 }
 
-func MustConfigDB() (*dbConfig, error) {
-	var dc dbConfig
+func MustConfigDB() (*DBConfig, error) {
+	var dc DBConfig
 	err := envconfig.Process("db", &dc)
 	if err != nil {
 		return nil, err

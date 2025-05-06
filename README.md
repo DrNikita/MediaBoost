@@ -11,3 +11,11 @@ Content improvement
     → Необходимо реализовать оценку контента для получения какого-то результата на основе наиболее высоко-оцененных доработок
     
 Тэги: ресурс совместного развития идей; реклама контента; продвижение
+
+
+
+
+-- CREATE MIGRATION
+-- migrate create -ext sql -dir migrations -seq create_users_table
+-- EXECUTE MIGRATIONS
+-- migrate -path ./migrations -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" up
