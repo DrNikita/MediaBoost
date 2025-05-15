@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "google.golang.org/grpc/examples/route_guide/routeguide";
+
+service Auth {
+    rpc SignIn (SignInCredentials) returns (SignInReply) {}
+    rpc SignUp (UserData) returns (SignUpReply) {}
+}
+
+message SignInCredentials {
+	string login = 1;
+	string password = 2;
+}
+
+message UserData {
+	string password = 1;
+	string email = 2;
+	string nickname = 3;
+	string firstName = 4;
+	string secondName = 5;
+	int32 age = 6;
+}
+
+message SignInReply {
+    string response = 1;
+}
+
+message SignUpReply {
+    string response = 1;
+}

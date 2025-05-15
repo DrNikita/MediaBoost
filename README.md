@@ -16,10 +16,23 @@ Content improvement
 
 
 -- CREATE MIGRATION
--- migrate create -ext sql -dir migrations -seq create_users_table
+```sh
+    migrate create -ext sql -dir migrations -seq users
+```
 -- EXECUTE MIGRATIONS
--- migrate -path ./migrations -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" up
+```sh
+    migrate -path ./migrations -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" up
+```
+
+--gRPC
+```sh
+    protoc --go_out=. --go_opt=paths=source_relative \
+        --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+        helloworld/helloworld.proto
+```
+--
 
 
-
-https://helllolworld.atlassian.net/jira/software/projects/MB/boards/35/backlog
+```json
+    https://helllolworld.atlassian.net/jira/software/projects/MB/boards/35/backlog
+```
