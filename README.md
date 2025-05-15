@@ -19,3 +19,7 @@ Content improvement
 -- migrate create -ext sql -dir migrations -seq create_users_table
 -- EXECUTE MIGRATIONS
 -- migrate -path ./migrations -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" up
+
+
+
+https://helllolworld.atlassian.net/jira/software/projects/MB/boards/35/backlog
