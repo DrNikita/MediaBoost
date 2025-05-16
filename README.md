@@ -12,13 +12,6 @@ Content improvement
     
 Тэги: ресурс совместного развития идей; реклама контента; продвижение
 
---gRPC
 ```sh
-
-```
---
-
-
-```json
     https://helllolworld.atlassian.net/jira/software/projects/MB/boards/35/backlog
 ```
