@@ -10,7 +10,7 @@ migrate-up:
 
 proto-generate:
 	@if [ -z "$(path)" ]; then \
-		echo "Usage: make proto-generate name=<path_to_file>"; \
+		echo "Usage: make proto-generate name=<path_to_proto_file>"; \
 		exit 1; \
 	fi
     protoc --go_out=. --go_opt=paths=source_relative \

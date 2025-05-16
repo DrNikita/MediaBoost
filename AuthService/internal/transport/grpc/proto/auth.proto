@@ -13,12 +13,13 @@ message SignInCredentials {
 }
 
 message UserData {
-	string password = 1;
+	string role = 1;
 	string email = 2;
 	string nickname = 3;
-	string firstName = 4;
-	string secondName = 5;
-	int32 age = 6;
+	string password = 4;
+	string firstName = 5;
+	string secondName = 6;
+	int32 age = 7;
 }
 
 message SignInReply {

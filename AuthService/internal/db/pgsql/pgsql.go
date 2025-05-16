@@ -1,10 +1,10 @@
-package db
+package pgsql
 
 import (
+	"auth-service/config"
 	"context"
 	"database/sql"
 	"fmt"
-	"mediaboost/config"
 
 	"github.com/rs/zerolog/log"
 )

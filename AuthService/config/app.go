@@ -7,7 +7,7 @@ import (
 
 type AppConfig struct {
 	Host string `envconfig:"host"`
-	Port string `envconfig:"port"`
+	Port int    `envconfig:"port"`
 }
 
 func MustConfigApp() (*AppConfig, error) {
