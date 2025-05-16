@@ -12,23 +12,9 @@ Content improvement
     
 Тэги: ресурс совместного развития идей; реклама контента; продвижение
 
-
-
-
--- CREATE MIGRATION
-```sh
-    migrate create -ext sql -dir migrations -seq users
-```
--- EXECUTE MIGRATIONS
-```sh
-    migrate -path ./migrations -database "postgres://username:password@localhost:5432/dbname?sslmode=disable" up
-```
-
 --gRPC
 ```sh
-    protoc --go_out=. --go_opt=paths=source_relative \
-        --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-        helloworld/helloworld.proto
+
 ```
 --
 
