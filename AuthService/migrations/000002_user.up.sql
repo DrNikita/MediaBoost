@@ -1,6 +1,6 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS "user" (
     id SERIAL PRIMARY KEY,
-    user_role INT REFERENCES roles(id),
+    user_role INT REFERENCES "role"(id),
     password_hash VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     nickname VARCHAR(255) UNIQUE NOT NULL,

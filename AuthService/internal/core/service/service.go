@@ -2,7 +2,9 @@ package service
 
 import "auth-service/internal/core/model"
 
-type Authenticator interface{}
+type Authenticator interface {
+	CreateAccessToken(role, email, nickname string) (string, error)
+}
 
 type UserStore interface{}
 
