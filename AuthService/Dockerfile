@@ -1,14 +1,13 @@
 FROM golang:1.19
 
 WORKDIR /app
+COPY . .
 
-COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod init auth-service
+RUN go mod tidy
 
-COPY *.go ./
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o /docker-gs-ping
+RUN CGO_ENABLED=0 GOOS=linux go build -o /auth
 
 EXPOSE 8080
 
-CMD ["/docker-gs-ping"]
+CMD ["/auth"]
