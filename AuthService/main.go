@@ -21,6 +21,11 @@ func main() {
 		log.Fatal().Err(err).Msg("˙†˙DB config error˙†˙")
 	}
 
+	_, err = config.MustConfigEventbus()
+	if err != nil {
+		log.Fatal().Err(err).Msg("˙†˙DB config error˙†˙")
+	}
+
 	// lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", appConfig.Host, appConfig.Port))
 	// if err != nil {
 
