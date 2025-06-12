@@ -1,8 +1,8 @@
-package api
+package grpc
 
 import (
 	"auth-service/internal/core/model"
-	pb "auth-service/internal/transport/grpc/proto"
+	pb "auth-service/internal/transport/grpc/gen/auth_service"
 	"context"
 	"errors"
 )

@@ -16,3 +16,6 @@ proto-generate:
     protoc --go_out=. --go_opt=paths=source_relative \
         --go-grpc_out=. --go-grpc_opt=paths=source_relative \
         $(path)
+
+
+protoc -I proto proto/auth_service/auth.proto --go_out=./internal/transport/grpc/gen --go_opt=paths=source_relative --go-grpc_out=./internal/transport/grpc/gen --go-grpc_opt=paths=source_relative
