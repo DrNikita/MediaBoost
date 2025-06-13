@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"auth-service/internal/core/model"
-	pb "auth-service/internal/transport/grpc/gen/auth_service"
+	pb "auth-service/internal/transport/grpc/gen/auth"
 	"context"
 	"errors"
 )

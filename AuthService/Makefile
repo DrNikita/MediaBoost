@@ -18,4 +18,6 @@ proto-generate:
         $(path)
 
 
-protoc -I proto proto/auth_service/auth.proto --go_out=./internal/transport/grpc/gen --go_opt=paths=source_relative --go-grpc_out=./internal/transport/grpc/gen --go-grpc_opt=paths=source_relative
+protoc -I proto proto/auth/auth.proto --go_out=./internal/transport/grpc/gen --go_opt=paths=source_relative --go-grpc_out=./internal/transport/grpc/gen --go-grpc_opt=paths=source_relative
+
+protoc -I proto proto/eventbus/message.proto --go_out=./internal/eventbus/gen --go_opt=paths=source_relative --go-grpc_out=./internal/eventbus/gen --go-grpc_opt=paths=source_relative

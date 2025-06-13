@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option go_package = "google.golang.org/grpc/examples/route_guide/routeguide";
+
+message UserRegistrated {
+    int64 UserId = 1;
+    string Email = 2;
+}

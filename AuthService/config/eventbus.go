@@ -3,7 +3,8 @@ package config
 import "github.com/kelseyhightower/envconfig"
 
 type EventbusConfig struct {
-	TopicRegistration string `envconfig:"TOPIK_NAME_REGISTRATION"`
+	TopicRegistration string   `envconfig:"TOPIK_NAME_REGISTRATION"`
+	BrokerAddresses   []string `envconfig:"BROKER_ADDRESSES"`
 }
 
 func MustConfigEventbus() (*EventbusConfig, error) {
