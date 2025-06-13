@@ -3,56 +3,52 @@ package kafka
 import (
 	"auth-service/config"
 	"context"
-	"encoding/json"
 
 	pb "auth-service/internal/eventbus/gen/eventbus"
 
 	"github.com/segmentio/kafka-go"
+
+	"google.golang.org/protobuf/proto"
 )
 
-var topicNames map[string]string
-
-func init() {
-	topicNames = map[string]string{
-		"registration": "user.registration",
-	}
-}
-
 type Eventbus struct {
+	writer *kafka.Writer
 	config config.EventbusConfig
 }
 
 func NewEventbus(config config.EventbusConfig) Eventbus {
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: config.BrokerAddresses,
+		Topic:   config.TopicRegistration,
+	})
+
 	return Eventbus{
+		writer: writer,
 		config: config,
 	}
 }
 
-func (e *Eventbus) NewwWriter() *kafka.Writer {
-	writer := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: e.config.BrokerAddresses,
-		Topic:   topicNames["registration"],
+func (e *Eventbus) NotifyRegistration(ctx context.Context, userId int64, email string) error {
+	messageBytes, err := proto.Marshal(&pb.UserRegistrated{
+		UserId: userId,
+		Email:  email,
 	})
-
-	return writer
-}
-
-func (e *Eventbus) NotifyRegisteration(ctx context.Context, userId string) error {
-	writer := e.NewwWriter()
-	defer writer.Close()
-
-	message := pb.UserRegistrated{
-		UserId: 0,
-		Email:  "",
-	}
-	messageBytes, err := json.Marshal(message)
 	if err != nil {
-		return Unknown
+		return ErrorWrap{
+			ErrType: Unknown,
+			Err:     err,
+		}
 	}
 
-	writer.WriteMessages(ctx, kafka.Message{
+	err = e.writer.WriteMessages(ctx, kafka.Message{
 		Value: messageBytes,
 	})
+	if err != nil {
+		return ErrorWrap{
+			ErrType: Unknown,
+			Err:     err,
+		}
+	}
 
 	return nil
 }
