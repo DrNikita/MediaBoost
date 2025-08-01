@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"bit/config"
 	"bit/internal/db/neo4j/model"
@@ -96,17 +97,17 @@ func (gr *GraphRepository) GetBranchByNodeId(ctx context.Context, driver neo4j.D
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("<database-name>"))
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	for _, f := range result.Records {
-		f.AsMap()[""]
-	}
+	// for _, f := range result.Records {
+	// f.AsMap()[""]
+	// }
 
 	summary := result.Summary
 	fmt.Printf("Created %v nodes in %+v.\n",
 		summary.Counters().NodesCreated(),
 		summary.ResultAvailableAfter())
 
-	return nil
+	// return nil
 }
