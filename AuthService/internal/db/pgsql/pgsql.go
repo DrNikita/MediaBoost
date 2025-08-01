@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/golang/groupcache/lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,6 +20,8 @@ func NewPgStore(config config.DBConfig, ctx context.Context) (*PgStore, error) {
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Name,
 	)
+
+	var ff lru.Cache
 
 	DB, err := sql.Open("postgres", connString)
 	if err != nil {

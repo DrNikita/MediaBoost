@@ -3,6 +3,8 @@ module auth-service
 go 1.23.5
 
 require (
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
+	github.com/hashicorp/golang-lru v1.0.2
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/zerolog v1.34.0
