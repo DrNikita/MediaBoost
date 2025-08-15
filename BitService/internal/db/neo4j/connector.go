@@ -1,17 +1,26 @@
 package neo4j
 
 import (
-	"bit/config"
+	cfg "bit/config"
 	"context"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 )
 
-func Connect(ctx context.Context, cfg *config.Neo4jDbConfig) (neo4j.DriverWithContext, error) {
-	// URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
+func Neo4jConnect(ctx context.Context, cfg *cfg.Neo4jDbConfig) (neo4j.DriverWithContext, error) {
+	useConsoleLogger := func(level log.Level) func(config *config.Config) {
+		return func(config *config.Config) {
+			config.Log = log.ToConsole(level)
+		}
+	}
+
 	driver, err := neo4j.NewDriverWithContext(
 		cfg.Uri,
-		neo4j.BasicAuth(cfg.User, cfg.Password, ""))
+		neo4j.BasicAuth(cfg.User, cfg.Password, ""),
+		useConsoleLogger(log.DEBUG),
+	)
 	if err != nil {
 		return nil, err
 	}

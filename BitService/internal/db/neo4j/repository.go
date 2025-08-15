@@ -2,6 +2,7 @@ package neo4j
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -9,36 +10,45 @@ import (
 	"bit/internal/db/neo4j/model"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/pkg/errors"
 )
 
-type GraphRepository struct{}
-
-func NewGraphRepository() *GraphRepository {
-	return &GraphRepository{}
+type GraphRepository struct {
+	driver neo4j.DriverWithContext
 }
 
-func (gr *GraphRepository) CreateBit(ctx context.Context, driver neo4j.DriverWithContext, bit model.Bit, cfg config.Neo4jDbConfig) error {
-	result, err := neo4j.ExecuteQuery(ctx, driver, `
-	CREATE (a:Bit {
-		Id: $Id,
+func NewGraphRepository(ctx context.Context, neo4jCfg *config.Neo4jDbConfig) (*GraphRepository, error) {
+	conn, err := Neo4jConnect(ctx, neo4jCfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create connection to neo4j")
+	}
+
+	return &GraphRepository{
+		driver: conn,
+	}, nil
+}
+
+func (gr *GraphRepository) CreateBit(ctx context.Context, bit *model.Bit) (string, error) {
+	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
+	CREATE (b:Bit {
 		AuthorId: $AuthorId,
 		Name: $Name,
 		Length: $Length,
 		Path: $Path,
 		Tags: $Tags
-	})`,
+	})
+	RETURN elementId(b) as id
+	`,
 		map[string]any{
-			"Id":       bit.Id,
 			"AuthorId": bit.AuthorId,
 			"Name":     bit.Name,
 			"Length":   bit.Length,
 			"Path":     bit.Path,
 			"Tags":     bit.Tags,
 		},
-		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("<database-name>"))
+		neo4j.EagerResultTransformer)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	summary := result.Summary
@@ -46,14 +56,15 @@ func (gr *GraphRepository) CreateBit(ctx context.Context, driver neo4j.DriverWit
 		summary.Counters().NodesCreated(),
 		summary.ResultAvailableAfter())
 
-	return nil
+	id := result.Records[0].Values[0].(string)
+
+	return id, nil
 }
 
-func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, driver neo4j.DriverWithContext, bit model.Bit, parentBitId string, cfg config.Neo4jDbConfig) error {
-	result, err := neo4j.ExecuteQuery(ctx, driver, `
-	MATCH (a:Bit) WHERE a.Id = $parentBitId
+func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, parentBitId string) (string, error) {
+	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
+	MATCH (a:Bit) WHERE elementId(a) = $ParentBitId
 	CREATE (a)-[:KNOWS]->(b:Bit {
-		Id: $Id,
 		AuthorId: $AuthorId,
 		Name: $Name,
 		Length: $Length,
@@ -61,20 +72,19 @@ func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, driver neo4j.Dri
 		Tags: $Tags
 	})
 	CREATE (b)-[:KNOWS]->(a)
+	RETURN elementId(b) as id
 	`,
 		map[string]any{
-			"parentBitId": parentBitId,
-			"Id":          bit.Id,
+			"ParentBitId": parentBitId,
 			"AuthorId":    bit.AuthorId,
 			"Name":        bit.Name,
 			"Length":      bit.Length,
 			"Path":        bit.Path,
 			"Tags":        bit.Tags,
 		},
-		neo4j.EagerResultTransformer,
-		neo4j.ExecuteQueryWithDatabase("<database-name>"))
+		neo4j.EagerResultTransformer)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	summary := result.Summary
@@ -82,14 +92,64 @@ func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, driver neo4j.Dri
 		summary.Counters().NodesCreated(),
 		summary.ResultAvailableAfter())
 
-	return nil
+	if len(result.Records) == 0 || len(result.Records[0].Values) == 0 {
+		return "", fmt.Errorf("no id returned from query")
+	}
+
+	id, ok := result.Records[0].Values[0].(string)
+	if !ok {
+		return "", fmt.Errorf("unexpected id type: %T", result.Records[0].Values[0])
+	}
+
+	return id, nil
 }
 
-func (gr *GraphRepository) GetBranchByNodeId(ctx context.Context, driver neo4j.DriverWithContext, nodeId string, cfg config.Neo4jDbConfig) {
-	result, err := neo4j.ExecuteQuery(ctx, driver, `
-	MATCH (root:Bit {Id: $nodeId})
-	MATCH path = (root)-[:KNOWS*]->(child)
-	RETURN path
+func (gr *GraphRepository) GetBitById(ctx context.Context, bitId string) (*model.Bit, error) {
+	session := gr.driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode: neo4j.AccessModeRead,
+		FetchSize:  1,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, `
+		MATCH (b:Bit) WHERE elementId(b) = $bitId
+		RETURN elementId(b) as Id, b.AuthorId as AuthorId, b.CoAuthorIds as CoAuthorIds,
+			b.Name as Name, b.Length as Length, b.Path as Path,
+			b.Tags as Tags, b.AditionalTags as AditionalTags
+		LIMIT 1
+	`,
+		map[string]any{
+			"bitId": bitId,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := result.Single(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	bitBytes, err := json.Marshal(record.AsMap())
+	if err != nil {
+		return nil, err
+	}
+
+	var bit model.Bit
+	err = json.Unmarshal(bitBytes, &bit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &bit, nil
+}
+
+func (gr *GraphRepository) GetBranchByNodeId(ctx context.Context, nodeId string) {
+	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
+		MATCH (root:Bit {elementId(root): $nodeId})
+		MATCH path = (root)-[:KNOWS*]->(child)
+		RETURN path
 	`,
 		map[string]any{
 			"nodeId": nodeId,
