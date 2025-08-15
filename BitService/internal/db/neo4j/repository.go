@@ -4,31 +4,49 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
-	"bit/config"
+	cfg "bit/internal/config"
 	"bit/internal/db/neo4j/model"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/pkg/errors"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/log"
 )
 
-type GraphRepository struct {
+type graphRepository struct {
 	driver neo4j.DriverWithContext
 }
 
-func NewGraphRepository(ctx context.Context, neo4jCfg *config.Neo4jDbConfig) (*GraphRepository, error) {
-	conn, err := Neo4jConnect(ctx, neo4jCfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create connection to neo4j")
-	}
-
-	return &GraphRepository{
-		driver: conn,
-	}, nil
+func NewGraphRepository(ctx context.Context, neo4jCfg *cfg.Neo4jConfig) *graphRepository {
+	return &graphRepository{}
 }
 
-func (gr *GraphRepository) CreateBit(ctx context.Context, bit *model.Bit) (string, error) {
+func (gr *graphRepository) InitGraphRepository(ctx context.Context, cfg *cfg.Neo4jConfig) error {
+	useConsoleLogger := func(level log.Level) func(config *config.Config) {
+		return func(config *config.Config) {
+			config.Log = log.ToConsole(level)
+		}
+	}
+
+	driver, err := neo4j.NewDriverWithContext(
+		cfg.Uri,
+		neo4j.BasicAuth(cfg.User, cfg.Password, ""),
+		useConsoleLogger(log.DEBUG),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = driver.VerifyConnectivity(ctx)
+	if err != nil {
+		return err
+	}
+
+	gr.driver = driver
+	return nil
+}
+
+func (gr *graphRepository) CreateBit(ctx context.Context, bit *model.Bit) (string, error) {
 	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
 	CREATE (b:Bit {
 		AuthorId: $AuthorId,
@@ -61,7 +79,7 @@ func (gr *GraphRepository) CreateBit(ctx context.Context, bit *model.Bit) (strin
 	return id, nil
 }
 
-func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, parentBitId string) (string, error) {
+func (gr *graphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, parentBitId string) (string, error) {
 	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
 	MATCH (a:Bit) WHERE elementId(a) = $ParentBitId
 	CREATE (a)-[:KNOWS]->(b:Bit {
@@ -104,7 +122,7 @@ func (gr *GraphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, 
 	return id, nil
 }
 
-func (gr *GraphRepository) GetBitById(ctx context.Context, bitId string) (*model.Bit, error) {
+func (gr *graphRepository) GetBitById(ctx context.Context, bitId string) (*model.Bit, error) {
 	session := gr.driver.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeRead,
 		FetchSize:  1,
@@ -145,19 +163,19 @@ func (gr *GraphRepository) GetBitById(ctx context.Context, bitId string) (*model
 	return &bit, nil
 }
 
-func (gr *GraphRepository) GetBranchByNodeId(ctx context.Context, nodeId string) {
+func (gr *graphRepository) GetBranchByBitId(ctx context.Context, bitId string, depth int) {
 	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
 		MATCH (root:Bit {elementId(root): $nodeId})
 		MATCH path = (root)-[:KNOWS*]->(child)
 		RETURN path
 	`,
 		map[string]any{
-			"nodeId": nodeId,
+			"nodeId": bitId,
 		},
 		neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("<database-name>"))
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	// for _, f := range result.Records {

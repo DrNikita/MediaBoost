@@ -5,15 +5,15 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type Neo4jDbConfig struct {
+type Neo4jConfig struct {
 	Uri      string `envconfig:"uri"`
 	User     string `envconfig:"user"`
 	Password string `envconfig:"password"`
 	Name     string `envconfig:"name"`
 }
 
-func Neo4jConfig() (*Neo4jDbConfig, error) {
-	var dbCfg Neo4jDbConfig
+func Neo4jMustConfig() (*Neo4jConfig, error) {
+	var dbCfg Neo4jConfig
 
 	err := envconfig.Process("neo4j", &dbCfg)
 	if err != nil {

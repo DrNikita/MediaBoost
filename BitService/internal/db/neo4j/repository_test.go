@@ -1,7 +1,7 @@
 package neo4j
 
 import (
-	"bit/config"
+	"bit/internal/config"
 	"bit/internal/db/neo4j/model"
 	"context"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var neo4JCreds = &config.Neo4jDbConfig{
+var neo4JCreds = &config.Neo4jConfig{
 	Uri:      "neo4j://localhost",
 	User:     "neo4j",
 	Password: "password",
@@ -42,7 +42,8 @@ var neo4JCreds = &config.Neo4jDbConfig{
 func TestCreateBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository, err := NewGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(ctx, neo4JCreds)
+	err := repository.InitGraphRepository(ctx, neo4JCreds)
 	assert.NoError(t, err)
 
 	testCases := []struct {
@@ -73,7 +74,8 @@ func TestCreateBit(t *testing.T) {
 func TestCreateLinkedBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository, err := NewGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(ctx, neo4JCreds)
+	err := repository.InitGraphRepository(ctx, neo4JCreds)
 	assert.NoError(t, err)
 
 	testCases := []struct {
@@ -106,7 +108,8 @@ func TestCreateLinkedBit(t *testing.T) {
 func TestGetBitById(t *testing.T) {
 	ctx := context.Background()
 
-	repository, err := NewGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(ctx, neo4JCreds)
+	err := repository.InitGraphRepository(ctx, neo4JCreds)
 	assert.NoError(t, err)
 
 	testCases := []struct {
