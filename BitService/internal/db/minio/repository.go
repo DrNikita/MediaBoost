@@ -4,6 +4,7 @@ import (
 	"bit/internal/config"
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -11,16 +12,19 @@ import (
 
 type minioStorage struct {
 	client *minio.Client
+	cfg    config.MinioConfig
 }
 
-func NewMinioStorage() *minioStorage {
-	return &minioStorage{}
+func NewMinioStorage(cfg config.MinioConfig) *minioStorage {
+	return &minioStorage{
+		cfg: cfg,
+	}
 }
 
-func (ms *minioStorage) InitMinioStorage(ctx context.Context, cfg config.MinioConfig) error {
-	client, err := minio.New(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.RootUser, cfg.RootPassword, ""),
-		Secure: cfg.UseSSL,
+func (ms *minioStorage) Connect(ctx context.Context) error {
+	client, err := minio.New(fmt.Sprintf("%s:%s", ms.cfg.Host, ms.cfg.Port), &minio.Options{
+		Creds:  credentials.NewStaticV4(ms.cfg.RootUser, ms.cfg.RootPassword, ""),
+		Secure: ms.cfg.UseSSL,
 	})
 	if err != nil {
 		return err
@@ -28,12 +32,12 @@ func (ms *minioStorage) InitMinioStorage(ctx context.Context, cfg config.MinioCo
 
 	ms.client = client
 
-	exists, err := ms.client.BucketExists(ctx, cfg.BucketName)
+	exists, err := ms.client.BucketExists(ctx, ms.cfg.BucketName)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		err := ms.client.MakeBucket(ctx, cfg.BucketName, minio.MakeBucketOptions{})
+		err = ms.client.MakeBucket(ctx, ms.cfg.BucketName, minio.MakeBucketOptions{})
 		if err != nil {
 			return err
 		}
@@ -42,6 +46,20 @@ func (ms *minioStorage) InitMinioStorage(ctx context.Context, cfg config.MinioCo
 	return nil
 }
 
-func (ms *minioStorage) SaveBit() error {
+func (ms *minioStorage) SaveBit(ctx context.Context, data io.Reader, dataLen int64, fileName string) error {
+	_, err := ms.client.PutObject(ctx, ms.cfg.BucketName, "/bit/{userId}/{fileName}", data, dataLen, minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ms *minioStorage) SaveBitAsChild(ctx context.Context, data io.Reader, dataLen int64, fileName string, parentBit int64) error {
+	_, err := ms.client.PutObject(ctx, ms.cfg.BucketName, "/bit/{parentBitId}/{userId}/{fileName}", data, dataLen, minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

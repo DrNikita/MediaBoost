@@ -15,13 +15,16 @@ import (
 
 type graphRepository struct {
 	driver neo4j.DriverWithContext
+	cfg    cfg.Neo4jConfig
 }
 
-func NewGraphRepository(ctx context.Context, neo4jCfg *cfg.Neo4jConfig) *graphRepository {
-	return &graphRepository{}
+func NewGraphRepository(cfg cfg.Neo4jConfig) *graphRepository {
+	return &graphRepository{
+		cfg: cfg,
+	}
 }
 
-func (gr *graphRepository) InitGraphRepository(ctx context.Context, cfg *cfg.Neo4jConfig) error {
+func (gr *graphRepository) Connect(ctx context.Context) error {
 	useConsoleLogger := func(level log.Level) func(config *config.Config) {
 		return func(config *config.Config) {
 			config.Log = log.ToConsole(level)
@@ -29,8 +32,8 @@ func (gr *graphRepository) InitGraphRepository(ctx context.Context, cfg *cfg.Neo
 	}
 
 	driver, err := neo4j.NewDriverWithContext(
-		cfg.Uri,
-		neo4j.BasicAuth(cfg.User, cfg.Password, ""),
+		gr.cfg.Uri,
+		neo4j.BasicAuth(gr.cfg.User, gr.cfg.Password, ""),
 		useConsoleLogger(log.DEBUG),
 	)
 	if err != nil {
@@ -61,7 +64,7 @@ func (gr *graphRepository) CreateBit(ctx context.Context, bit *model.Bit) (strin
 			"AuthorId": bit.AuthorId,
 			"Name":     bit.Name,
 			"Length":   bit.Length,
-			"Path":     bit.Path,
+			"Path":     bit.ObjectPath,
 			"Tags":     bit.Tags,
 		},
 		neo4j.EagerResultTransformer)
@@ -97,7 +100,7 @@ func (gr *graphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, 
 			"AuthorId":    bit.AuthorId,
 			"Name":        bit.Name,
 			"Length":      bit.Length,
-			"Path":        bit.Path,
+			"Path":        bit.ObjectPath,
 			"Tags":        bit.Tags,
 		},
 		neo4j.EagerResultTransformer)

@@ -42,8 +42,8 @@ var neo4JCreds = &config.Neo4jConfig{
 func TestCreateBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(ctx, neo4JCreds)
-	err := repository.InitGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(*neo4JCreds)
+	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 
 	testCases := []struct {
@@ -57,7 +57,7 @@ func TestCreateBit(t *testing.T) {
 				AuthorId:      1,
 				Name:          "Any name",
 				Length:        180,
-				Path:          "path to the file on server",
+				ObjectPath:    "path to the file on server",
 				Tags:          []model.Tag{model.Electronic, model.KPop, model.JPop, model.Classical},
 				AditionalTags: []string{"Self created tag", "Tag which noone never heard about"},
 			},
@@ -74,8 +74,8 @@ func TestCreateBit(t *testing.T) {
 func TestCreateLinkedBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(ctx, neo4JCreds)
-	err := repository.InitGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(*neo4JCreds)
+	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 
 	testCases := []struct {
@@ -90,7 +90,7 @@ func TestCreateLinkedBit(t *testing.T) {
 				AuthorId:      3,
 				Name:          "NN",
 				Length:        181,
-				Path:          "path to the file on server",
+				ObjectPath:    "path to the file on server",
 				Tags:          []model.Tag{model.Electronic, model.KPop, model.JPop, model.Classical},
 				AditionalTags: []string{"Self created tag", "Tag which noone never heard about"},
 			},
@@ -108,8 +108,8 @@ func TestCreateLinkedBit(t *testing.T) {
 func TestGetBitById(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(ctx, neo4JCreds)
-	err := repository.InitGraphRepository(ctx, neo4JCreds)
+	repository := NewGraphRepository(*neo4JCreds)
+	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 
 	testCases := []struct {

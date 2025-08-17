@@ -6,9 +6,10 @@ type Bit struct {
 	CoAuthorIds   []int
 	Name          string
 	Length        int
-	Path          string
+	ObjectPath    string
 	Tags          []Tag
 	AditionalTags []string
+	LayerLevel    int
 }
 
 type BitTree struct {
