@@ -1,10 +1,9 @@
 package main
 
 import (
+	"bit/internal/adapter/minio"
+	"bit/internal/adapter/neo4j"
 	"bit/internal/config"
-	"bit/internal/db/minio"
-	"bit/internal/db/neo4j"
-	"bit/internal/service"
 	"context"
 	"log"
 )
@@ -22,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	neo4j := neo4j.NewGraphRepository(*neo4jCfg)
+	neo4j := neo4j.NewGraphRepository(neo4jCfg)
 	err = neo4j.Connect(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -34,6 +33,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bitService := service.NewBitService(neo4j, minio)
-	bitService.DoSmthng()
+	// bitService := domain.NewBitService(neo4j, minio)
+	// bitService.DoSmthng()
 }

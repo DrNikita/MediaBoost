@@ -1,8 +1,8 @@
 package neo4j
 
 import (
+	"bit/internal/domain"
 	"bit/internal/config"
-	"bit/internal/db/neo4j/model"
 	"context"
 	"fmt"
 	"testing"
@@ -42,23 +42,23 @@ var neo4JCreds = &config.Neo4jConfig{
 func TestCreateBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(*neo4JCreds)
+	repository := NewGraphRepository(neo4JCreds)
 	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 
 	testCases := []struct {
 		name string
-		bit  *model.Bit
+		bit  *domain.Bit
 	}{
 		{
 			name: "Success, CreateBit",
-			bit: &model.Bit{
+			bit: &domain.Bit{
 				Id:            uuid.NewString(),
 				AuthorId:      1,
 				Name:          "Any name",
 				Length:        180,
 				ObjectPath:    "path to the file on server",
-				Tags:          []model.Tag{model.Electronic, model.KPop, model.JPop, model.Classical},
+				Tags:          []domain.Tag{domain.Electronic, domain.KPop, domain.JPop, domain.Classical},
 				AditionalTags: []string{"Self created tag", "Tag which noone never heard about"},
 			},
 		},
@@ -74,24 +74,24 @@ func TestCreateBit(t *testing.T) {
 func TestCreateLinkedBit(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(*neo4JCreds)
+	repository := NewGraphRepository(neo4JCreds)
 	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 
 	testCases := []struct {
 		name        string
-		bit         *model.Bit
+		bit         *domain.Bit
 		parentBitId string
 	}{
 		{
 			name: "Success, CreateBit",
-			bit: &model.Bit{
+			bit: &domain.Bit{
 				Id:            uuid.NewString(),
 				AuthorId:      3,
 				Name:          "NN",
 				Length:        181,
 				ObjectPath:    "path to the file on server",
-				Tags:          []model.Tag{model.Electronic, model.KPop, model.JPop, model.Classical},
+				Tags:          []domain.Tag{domain.Electronic, domain.KPop, domain.JPop, domain.Classical},
 				AditionalTags: []string{"Self created tag", "Tag which noone never heard about"},
 			},
 			parentBitId: "4:fe1157a1-8244-434d-8032-c2a604a878a0:1",
@@ -108,7 +108,7 @@ func TestCreateLinkedBit(t *testing.T) {
 func TestGetBitById(t *testing.T) {
 	ctx := context.Background()
 
-	repository := NewGraphRepository(*neo4JCreds)
+	repository := NewGraphRepository(neo4JCreds)
 	err := repository.Connect(ctx)
 	assert.NoError(t, err)
 

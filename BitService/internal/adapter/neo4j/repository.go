@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	cfg "bit/internal/config"
-	"bit/internal/db/neo4j/model"
+	"bit/internal/domain"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
@@ -15,10 +16,10 @@ import (
 
 type graphRepository struct {
 	driver neo4j.DriverWithContext
-	cfg    cfg.Neo4jConfig
+	cfg    *cfg.Neo4jConfig
 }
 
-func NewGraphRepository(cfg cfg.Neo4jConfig) *graphRepository {
+func NewGraphRepository(cfg *cfg.Neo4jConfig) *graphRepository {
 	return &graphRepository{
 		cfg: cfg,
 	}
@@ -30,6 +31,8 @@ func (gr *graphRepository) Connect(ctx context.Context) error {
 			config.Log = log.ToConsole(level)
 		}
 	}
+
+	logger := slog.Logger{}
 
 	driver, err := neo4j.NewDriverWithContext(
 		gr.cfg.Uri,
@@ -49,7 +52,7 @@ func (gr *graphRepository) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (gr *graphRepository) CreateBit(ctx context.Context, bit *model.Bit) (string, error) {
+func (gr *graphRepository) CreateBit(ctx context.Context, bit *domain.Bit) (string, error) {
 	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
 	CREATE (b:Bit {
 		AuthorId: $AuthorId,
@@ -82,7 +85,7 @@ func (gr *graphRepository) CreateBit(ctx context.Context, bit *model.Bit) (strin
 	return id, nil
 }
 
-func (gr *graphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, parentBitId string) (string, error) {
+func (gr *graphRepository) CreateLinkedBit(ctx context.Context, bit *domain.Bit, parentBitId string) (string, error) {
 	result, err := neo4j.ExecuteQuery(ctx, gr.driver, `
 	MATCH (a:Bit) WHERE elementId(a) = $ParentBitId
 	CREATE (a)-[:KNOWS]->(b:Bit {
@@ -125,7 +128,7 @@ func (gr *graphRepository) CreateLinkedBit(ctx context.Context, bit *model.Bit, 
 	return id, nil
 }
 
-func (gr *graphRepository) GetBitById(ctx context.Context, bitId string) (*model.Bit, error) {
+func (gr *graphRepository) GetBitById(ctx context.Context, bitId string) (*domain.Bit, error) {
 	session := gr.driver.NewSession(ctx, neo4j.SessionConfig{
 		AccessMode: neo4j.AccessModeRead,
 		FetchSize:  1,
@@ -157,7 +160,7 @@ func (gr *graphRepository) GetBitById(ctx context.Context, bitId string) (*model
 		return nil, err
 	}
 
-	var bit model.Bit
+	var bit domain.Bit
 	err = json.Unmarshal(bitBytes, &bit)
 	if err != nil {
 		return nil, err
